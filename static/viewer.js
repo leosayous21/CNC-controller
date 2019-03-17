@@ -133,54 +133,53 @@ function render() {
 
 
 var Viewer=function(){
-
-  this.drawLines=function(vectors, color, thickness){
+  this.probe3D = {};
+  this.drawLine=function(vectors, color, thickness){
+    const line=this.getLine(vectors,color,thickness);
+    scene.add( line );
+  };
+  this.getLine=function(vectors, color, thickness){
     thickness=typeof thickness=="undefined"?1:thickness;
-
-
     var material = new THREE.LineBasicMaterial({
       color: color,
       linewidth:thickness
     });
-
     var geometry = new THREE.Geometry();
     for(var i=0; i<vectors.length; i++){
       geometry.vertices.push(new THREE.Vector3(vectors[i].x,vectors[i].y,vectors[i].z));
     }
-
-    var line = new THREE.Line( geometry, material );
-    scene.add( line );
-  }
-
+    return new THREE.Line( geometry, material );
+  };
   this.drawCircle=function(position,radius, color){
+    const circle=this.getCircle(position,radius, color);
+    scene.add( circle );
+  };
+  this.getCircle=function(position,radius, color){
     var geometry = new THREE.CircleGeometry( 2, radius);
     geometry.applyMatrix( new THREE.Matrix4().makeTranslation(position.x,position.y,position.z));
     var material = new THREE.MeshBasicMaterial( { color: color } );
-    var circle = new THREE.Mesh( geometry, material );
-    scene.add( circle );
-  }
-
-  this.show=function(){
-    renderer.setClearColor("white", 1);
+    return new THREE.Mesh( geometry, material );
+  };
+  this.render=function(){
     renderer.render( scene, camera );
-  }
+  };
 
   this.drawGrid=function(){
     myView.drawCircle(0,0,32,"red");
     //vertical
     for(var i=-50; i<50; i++){
-      this.drawLines([{x:i*10, y:-500, z:0},{x:i*10, y:500, z:0}], "gray");
+      this.drawLine([{x:i*10, y:-500, z:0},{x:i*10, y:500, z:0}], "gray");
     }
 
     //horizontal
     for(var i=-50; i<50; i++){
-      this.drawLines([{x:-500, y:i*10, z:0},{x:500, y:i*10, z:0}], "gray");
+      this.drawLine([{x:-500, y:i*10, z:0},{x:500, y:i*10, z:0}], "gray");
     }
 
     //drawX;
-    this.drawLines([{x:0, y:0, z:0},{x:100, y:0, z:0}], "red",2);
+    this.drawLine([{x:0, y:0, z:0},{x:100, y:0, z:0}], "red",2);
     //drawY;
-    this.drawLines([{x:0, y:0, z:0},{x:0, y:100, z:0}], "green",2);
+    this.drawLine([{x:0, y:0, z:0},{x:0, y:100, z:0}], "green",2);
 
   }
   this.drawCone=function(position){
@@ -189,14 +188,20 @@ var Viewer=function(){
     geometry.applyMatrix( new THREE.Matrix4().makeTranslation(position.x,position.y,25+position.z));
 
     var material = new THREE.MeshBasicMaterial( {color: "blue",opacity: 0.5} );
-    var cone = new THREE.Mesh( geometry, material );
+    const cone = new THREE.Mesh( geometry, material );
+    const verticalLine = this.getLine([{x:position.x,y:position.y, z:0},{x:position.x,y:position.y, z:200}], "blue",2);
+    const circleProjection = this.getCircle({x:position.x,y:position.y,z:0}, 10, "blue");
+    this.probe3D = {cone: cone, line: verticalLine, circle: circleProjection};
     scene.add( cone );
-
-    this.drawLines([{x:position.x,y:position.y, z:0},{x:position.x,y:position.y, z:200}], "blue",2);
-
-    //projection
-    this.drawCircle({x:position.x,y:position.y,z:0}, 10, "blue");
-  }
+    scene.add( verticalLine );
+    scene.add( circleProjection );
+  };
+  this.updateCone=function(position){
+    if(!this.probe3D) return;
+    this.probe3D.cone.position.set(position.x, position.y, position.z);
+    this.probe3D.line.position.set(position.x, position.y, 0);
+    this.probe3D.circle.position.set(position.x, position.y, 0);
+  };
   this.gcode="";
   this.allGCode=[];
   this.drawGCode=function(gcode){
@@ -232,16 +237,20 @@ var Viewer=function(){
       this.allGCode.push({x:gcodePositions.x, y:gcodePositions.y,z:gcodePositions.z});
     }
 
-  }
-
+  };
   this.drawCNC=function(position){
     scene = new THREE.Scene();
     myView.drawGrid();
     myView.drawCone(position);
-    this.drawLines(this.allGCode, "blue");
-    myView.show();
+    this.drawLine(this.allGCode, "blue");
+    renderer.setClearColor("white", 1);
+    myView.render();
+  };
+  this.updateCNCPos = function(position){
+    this.updateCone(position);
+    myView.render();
   }
-}
+};
 
 myView=new Viewer();
 

@@ -41,12 +41,13 @@ jQuery(document).ready(function() {
      $("#position_x").val(val.x);
      $("#position_y").val(val.y);
      $("#position_z").val(val.z);
-     myView.drawCNC(val);
+     myView.updateCNCPos(val);
    };
    runCommandCallback(getStatus.value, function(data){getStatus.treat(data)});
  }
 
  updatePos();
+ myView.drawCNC({x:0,y:0,z:0});
  setInterval(updatePos, 500); // 1 * 500 miliseconds
 });
 
