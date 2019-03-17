@@ -32,22 +32,18 @@ app.get('/test/:test', function(req, res) {
         res.render('page.ejs', {test: req.params.test});
         });
 
-app.post('/command', function (req, res) {
-  console.log('req.body', req.body);
-  serial.serialPortController.write(req.body.data);
-  serial.serialPortController.once('data', function (data) {
-    console.log('data:'+data);
-    res.send(data);
+const makeResponse = function (data, res) {
+  serial.serialPortController.write(data);
+  serial.serialResponse.once('data', function (data) {
+    res.send(data)
   });
+};
+app.post('/command', function (req, res) {
+  makeResponse(req.body.data, res)
 });
 
 app.post('/command_silent', function (req, res) {
-  console.log('req.body', req.body);
-  serial.serialPortController.write(req.body.data);
-  serial.serialPortController.once('data', function (data) {
-    console.log('Data_silent: ' + data);
-    res.send(data);
-  });
+  makeResponse(req.body.data, res)
 });
 
 app.use(function(req, res, next){

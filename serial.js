@@ -1,7 +1,21 @@
 //Serial communication
 var SerialPort = require("serialport");
-var serialPortController= new SerialPort("/dev/cu.usbmodem141101", {baudRate: 115200});
+var serialPortController= new SerialPort("/dev/cu.usbmodem146101", {baudRate: 115200});
+const EventEmitter = require('events');
 // internal function
+
+var serialResponse = new EventEmitter();
+
+var accumulator = '';
+
+serialPortController.on('data', function (data) {
+  accumulator += data;
+  if (data.indexOf('\n\n') !== -1) {
+    serialResponse.emit('data', accumulator);
+    accumulator='';
+    console.log('accumulator', accumulator);
+  }
+});
 
 serialPortController.open(function (error) {
   console.log('serialPortController opened');
@@ -19,3 +33,4 @@ serialPortController.on('error', function(error){
 });
 
 exports.serialPortController = serialPortController;
+exports.serialResponse = serialResponse;
