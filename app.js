@@ -33,7 +33,12 @@ app.get('/test/:test', function(req, res) {
         });
 
 const makeResponse = function (data, res) {
-  serial.serialPortController.write(data);
+  if(serial.locked) {
+    console.log('locked !');
+    res.send('locked');
+    return;
+  }
+  serial.write(data);
   serial.serialResponse.once('data', function (data) {
     res.send(data)
   });
@@ -56,14 +61,13 @@ app.use(function(req, res, next){
 io.on('connection', function (socket) {
   //new connection
   console.log("new connection");
- 
+
   socket.on('disconnect', function(){
     console.log("disconect");
   });
 
   socket.on('command', function(data) {
     console.log('command', data);
-    serial.serialPortController.write(data)
   })
 });
 

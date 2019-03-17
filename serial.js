@@ -7,13 +7,15 @@ const EventEmitter = require('events');
 var serialResponse = new EventEmitter();
 
 var accumulator = '';
+var lock = false;
 
 serialPortController.on('data', function (data) {
   accumulator += data;
   if (data.indexOf('\n\n') !== -1) {
+    console.log('accumulator', accumulator);
     serialResponse.emit('data', accumulator);
     accumulator='';
-    console.log('accumulator', accumulator);
+    lock=false;
   }
 });
 
@@ -34,3 +36,8 @@ serialPortController.on('error', function(error){
 
 exports.serialPortController = serialPortController;
 exports.serialResponse = serialResponse;
+exports.write=function(data){
+  lock=true;
+  serialPortController.write(data);
+};
+exports.locked=lock;
