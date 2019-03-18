@@ -32,23 +32,24 @@ app.get('/test/:test', function(req, res) {
         res.render('page.ejs', {test: req.params.test});
         });
 
-const makeResponse = function (data, res) {
-  if(serial.locked) {
-    console.log('locked !');
-    res.send('locked');
+const makeResponse = async function (data, res) {
+  const sent = await serial.write(data);
+  console.log('sent', sent);
+  if(!sent) {
+    console.log('Too much connection');
+    res.send('Too much connection !');
     return;
   }
-  serial.write(data);
   serial.serialResponse.once('data', function (data) {
     res.send(data)
   });
 };
-app.post('/command', function (req, res) {
-  makeResponse(req.body.data, res)
+app.post('/command', async function (req, res) {
+  await makeResponse(req.body.data, res)
 });
 
-app.post('/command_silent', function (req, res) {
-  makeResponse(req.body.data, res)
+app.post('/command_silent', async function (req, res) {
+  await makeResponse(req.body.data, res)
 });
 
 app.use(function(req, res, next){

@@ -5,6 +5,7 @@ const EventEmitter = require('events');
 // internal function
 
 var serialResponse = new EventEmitter();
+const helper=require('./helper');
 
 var accumulator = '';
 var lock = false;
@@ -35,16 +36,19 @@ serialPortController.on('error', function(error){
 	console.log("Optimate controller has encounter an error ! "+error);
 });
 
+
 exports.serialPortController = serialPortController;
 exports.serialResponse = serialResponse;
-const write = function(data){
+const write = async function(data, retry=3){
+  if(retry<=0) return false;
   if(lock) {
     console.log('locked - previous not finished');
-    setTimeout(() => write(data), 100);
-    return;
+    await helper.delay(100);
+    return write(data, retry-1);
   }
   lock=true;
   serialPortController.write(data);
+  return true
 };
 exports.write=write;
 exports.locked=lock;
