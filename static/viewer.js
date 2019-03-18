@@ -236,13 +236,12 @@ var Viewer=function(){
       }
       this.allGCode.push({x:gcodePositions.x, y:gcodePositions.y,z:gcodePositions.z});
     }
-
+    this.drawLine(this.allGCode, "blue");
   };
   this.drawCNC=function(position){
     scene = new THREE.Scene();
     myView.drawGrid();
     myView.drawCone(position);
-    this.drawLine(this.allGCode, "blue");
     renderer.setClearColor("white", 1);
     myView.render();
   };
