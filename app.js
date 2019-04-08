@@ -35,15 +35,14 @@ app.get('/test/:test', function(req, res) {
 app.post('/command', async function (req, res) {
   let command = req.body.data;
   if (command.slice(0, 3)==='cat') command+='\n';
-  await serial.handleCommand(command, res)
+  await serial.handleCommand(res, command)
 });
 app.post('/upload', async function (req, res) {
   const file = JSON.parse(req.body.data)
-  console.log('file', file)
-  console.log('sent', sent);
+  await serial.upload(res, file.filename, file.content)
 });
 app.post('/command_silent', async function (req, res) {
-  await serial.handleCommand(req.body.data, res)
+  await serial.handleCommand(res, req.body.data)
 });
 
 app.use(function(req, res, next){

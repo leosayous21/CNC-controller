@@ -1,7 +1,7 @@
 //Serial communication
 var SerialPort = require("serialport");
 var Queue = require("promise-queue");
-var serialQueue = new Queue(1, 3);
+var serialQueue = new Queue(1, 1);
 var serialPortController= new SerialPort("/dev/ttyACM0", {baudRate: 115200});
 const EventEmitter = require('events');
 // internal function
@@ -16,7 +16,7 @@ serialPortController.on('data', function (data) {
   console.log('on data', data.toString());
   accumulator += data;
   var lastCharacters = data.slice(-4).toString();
-  if (lastCharacters === 'ok\r\n' || lastCharacters === '>\r\n\n') {
+  if (lastCharacters === 'ok\r\n' || lastCharacters === '>\r\n\n' || lastCharacters === 'sh\r\n') {
     serialResponse.emit('data', accumulator);
     accumulator='';
     lock=false;
@@ -54,14 +54,24 @@ const writeWaitResponse = async function(data){
   console.log('response', response);
   return response;
 }
-const upload = async function(filename, content){
-    
-};
-
-const handleCommand = async function (data, res) {
-  serialQueue.add(() => writeWaitResponse(data))
+const handleQueue = async function(res, callback) {
+  return serialQueue.add(callback)
     .then(data => res.send(data))
     .catch(err => res.status(500).send(`Error: ${err}`));
+}
+const upload = async function(res, filename, content){
+  await handleQueue(res, async function () {
+    await writeWaitResponse(`upload /sd/${filename}`+'\n')
+    console.log('ok upload start command');
+    write(content)
+    console.log('ok write content command');
+    write(String.fromCharCode(26))
+    console.log('ok ctrl+Z')
+  })
+};
+
+const handleCommand = async function (res, data) {
+  await handleQueue(res, () => writeWaitResponse(data))
 };
 exports.upload=upload;
 exports.locked=lock;
