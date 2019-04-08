@@ -33,21 +33,18 @@ app.get('/test/:test', function(req, res) {
         });
 
 const makeResponse = async function (data, res) {
-  const sent = await serial.write(data);
-  console.log('sent', sent);
-  if(!sent) {
-    console.log('Too much connection');
-    res.send('Too much connection !');
-    return;
-  }
-  serial.serialResponse.once('data', function (data) {
-    res.send(data)
-  });
+  await serial.writeWaitResponse(data)
+    .then((data) => res.send(data))
+    .catch((err) => res.send('Error: '+err));
 };
 app.post('/command', async function (req, res) {
   await makeResponse(req.body.data, res)
 });
-
+app.post('/upload', async function (req, res) {
+  const file = JSON.parse(req.body.data)
+  console.log('file', file)
+  console.log('sent', sent);
+});
 app.post('/command_silent', async function (req, res) {
   await makeResponse(req.body.data, res)
 });
@@ -57,7 +54,10 @@ app.use(function(req, res, next){
         res.status(404).send('Page introuvable !');
         });
 
-
+app.use(function(err, req, res, next) {
+    // handle your errors
+    console.log('err', err)
+});
 
 io.on('connection', function (socket) {
   //new connection
