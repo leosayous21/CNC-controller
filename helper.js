@@ -1,6 +1,6 @@
 const delay = duration => new Promise(resolve => setTimeout(resolve, duration));
 exports.delay = delay;
-exports.timeout = async () => {
-  await delay(100);
+exports.timeout = async (duration) => {
+  await delay(duration);
   throw new Error('Timeout !');
 }

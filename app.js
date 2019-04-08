@@ -32,13 +32,8 @@ app.get('/test/:test', function(req, res) {
         res.render('page.ejs', {test: req.params.test});
         });
 
-const makeResponse = async function (data, res) {
-  await serial.writeWaitResponse(data)
-    .then((data) => res.send(data))
-    .catch((err) => res.send('Error: '+err));
-};
 app.post('/command', async function (req, res) {
-  await makeResponse(req.body.data, res)
+  await serial.handleCommand(req.body.data, res)
 });
 app.post('/upload', async function (req, res) {
   const file = JSON.parse(req.body.data)
@@ -46,7 +41,7 @@ app.post('/upload', async function (req, res) {
   console.log('sent', sent);
 });
 app.post('/command_silent', async function (req, res) {
-  await makeResponse(req.body.data, res)
+  await serial.handleCommand(req.body.data, res)
 });
 
 app.use(function(req, res, next){

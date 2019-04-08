@@ -1,5 +1,7 @@
 //Serial communication
 var SerialPort = require("serialport");
+var Queue = require("promise-queue");
+var serialQueue = new Queue(1, 4);
 var serialPortController= new SerialPort("/dev/ttyACM0", {baudRate: 115200});
 const EventEmitter = require('events');
 // internal function
@@ -11,6 +13,7 @@ var accumulator = '';
 var lock = false;
 
 serialPortController.on('data', function (data) {
+  console.log('on data', data.toString());
   accumulator += data;
   var lastCharacters = data.slice(-4).toString();
   if (lastCharacters === 'ok\r\n' || lastCharacters === '>\r\n\n') {
@@ -37,7 +40,7 @@ serialPortController.on('error', function(error){
 
 const waitResponse = async function(){
   const response = new Promise(resolve => serialResponse.once('data', resolve));
-  return Promise.race([response, Helper.timeout(5000)]);
+  return Promise.race([response, Helper.timeout(10000)]);
 }
 
 exports.serialPortController = serialPortController;
@@ -54,6 +57,13 @@ const writeWaitResponse = async function(data){
 const upload = async function(filename, content){
     
 };
+
+const handleCommand = async function (data, res) {
+  serialQueue.add(() => writeWaitResponse(data))
+    .then(data => res.send(data))
+    .catch(err => res.status(500).send(`Error: ${err}`));
+};
 exports.upload=upload;
 exports.locked=lock;
 exports.writeWaitResponse=writeWaitResponse;
+exports.handleCommand = handleCommand;
