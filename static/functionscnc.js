@@ -48,7 +48,7 @@ jQuery(document).ready(function() {
 
  updatePos();
  myView.drawCNC({x:0,y:0,z:0});
- setInterval(updatePos, 500); // 1 * 500 miliseconds
+ setInterval(updatePos, 1000); // 1 * 500 miliseconds
 });
 
 $(document).keypress(function(e){
@@ -121,43 +121,13 @@ function upload()
 { $("#progress").empty();
   $("#uploadresult").empty();
   var b=document.getElementById("files").files[0];
-  var a=new FileReader();a.readAsBinaryString(b);
-  a.onloadend=function(c){xhr=new XMLHttpRequest();
-  xhr.open("POST","/upload",true);
-  xhr.setRequestHeader("X-Filename",b.name);
-  XMLHttpRequest.prototype.mySendAsBinary=function(k)
-    {
-      var h=new ArrayBuffer(k.length);
-       var f=new Uint8Array(h,0);
-       for (var g=0;g<k.length;g++)
-         { f[g]=(k.charCodeAt(g)&255)
-         }
-       if(typeof window.Blob=="function") {
-         var e=new Blob([h])
-       } else {
-         var j=new (window.MozBlobBuilder||window.WebKitBlobBuilder||window.BlobBuilder)();
-         j.append(h);
-        var e=j.getBlob()
-      }
-      this.send(e)
-    };
-    var d=xhr.upload||xhr;
-    d.addEventListener("progress",function(i) {
-       var f=i.position||i.loaded;
-       var h=i.totalSize||i.total;
-       var g=Math.round((f/h)*100);
-       $("#progress").empty().append("uploaded "+g+"%")
-    } );
-   xhr.onreadystatechange=function() {
-      if(xhr.readyState==4) {
-       if(xhr.status==200) {
-            $("#uploadresult").empty().append("Uploaded "+b.name+" OK")
-        } else {
-            $("#uploadresult").empty().append("Uploading "+b.name+" Failed")
-       }
-    }
-  };
-  xhr.mySendAsBinary(c.target.result)}
+  var a=new FileReader();
+  a.readAsBinaryString(b);
+  a.onloadend=function(c){
+  file = {filename: b.name, content: a.result}
+  console.log('file', file)
+  $.post("/upload", {data: JSON.stringify(file)}, () => console.log('ok', ok));
+  }
 }
 
 function copyofupload(){$("#progress").empty();$("#uploadresult").empty();var b=document.getElementById("files").files[0];var a=new FileReader();a.readAsBinaryString(b);a.onloadend=function(c){xhr=new XMLHttpRequest();xhr.open("POST","upload",true);xhr.setRequestHeader("X-Filename",b.name);XMLHttpRequest.prototype.mySendAsBinary=function(k){var h=new ArrayBuffer(k.length);var f=new Uint8Array(h,0);for(var g=0;g<k.length;g++){f[g]=(k.charCodeAt(g)&255)}if(typeof window.Blob=="function"){var e=new Blob([h])}else{var j=new (window.MozBlobBuilder||window.WebKitBlobBuilder||window.BlobBuilder)();j.append(h);var e=j.getBlob()}this.send(e)};var d=xhr.upload||xhr;d.addEventListener("progress",function(i){var f=i.position||i.loaded;var h=i.totalSize||i.total;var g=Math.round((f/h)*100);$("#progress").empty().append("uploaded "+g+"%")});xhr.onreadystatechange=function(){if(xhr.readyState==4){if(xhr.status==200){$("#uploadresult").empty().append("Uploaded OK")}else{$("#uploadresult").empty().append("Upload Failed")}}};xhr.mySendAsBinary(c.target.result)}}
