@@ -33,7 +33,9 @@ app.get('/test/:test', function(req, res) {
         });
 
 app.post('/command', async function (req, res) {
-  await serial.handleCommand(req.body.data, res)
+  let command = req.body.data;
+  if (command.slice(0, 3)==='cat') command+='\n';
+  await serial.handleCommand(command, res)
 });
 app.post('/upload', async function (req, res) {
   const file = JSON.parse(req.body.data)

@@ -1,7 +1,7 @@
 //Serial communication
 var SerialPort = require("serialport");
 var Queue = require("promise-queue");
-var serialQueue = new Queue(1, 4);
+var serialQueue = new Queue(1, 3);
 var serialPortController= new SerialPort("/dev/ttyACM0", {baudRate: 115200});
 const EventEmitter = require('events');
 // internal function
@@ -40,7 +40,7 @@ serialPortController.on('error', function(error){
 
 const waitResponse = async function(){
   const response = new Promise(resolve => serialResponse.once('data', resolve));
-  return Promise.race([response, Helper.timeout(10000)]);
+  return Promise.race([response, Helper.timeout(2000)]);
 }
 
 exports.serialPortController = serialPortController;
